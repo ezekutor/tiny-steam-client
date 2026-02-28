@@ -190,3 +190,24 @@ Run (multiple accounts):
 Notes:
 - The Go implementation includes CLI parity for account input options, account file loading, CM list retrieval, concurrent session loops, reconnect behavior, and optional tiny-csgo-server heartbeat transport.
 - The existing C++ implementation remains in the repository as a protocol reference during migration.
+
+
+### Using `go-steam` + `SteamDatabase/Protobufs`
+
+The Go port now includes an integration path for:
+- [`github.com/paralin/go-steam`](https://github.com/paralin/go-steam)
+- [`github.com/SteamDatabase/Protobufs`](https://github.com/SteamDatabase/Protobufs)
+
+Build with integration enabled:
+
+```bash
+go build -tags steamlibs ./go-client/cmd/tiny-steam-client
+```
+
+Run with integration preference (enabled by default):
+
+```bash
+./tiny-steam-client -steamlibs=true -user account -pw password
+```
+
+If the binary is built **without** `-tags steamlibs`, the client automatically falls back to the built-in transport implementation.

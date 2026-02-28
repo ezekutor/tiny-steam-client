@@ -13,6 +13,7 @@ type Options struct {
 	ServerIP     string
 	ServerPort   int
 	AccountsFile string
+	UseSteamLibs bool
 }
 
 func Parse() (Options, error) {
@@ -24,6 +25,7 @@ func Parse() (Options, error) {
 	flag.StringVar(&o.ServerIP, "sip", "", "Tiny csgo server ip")
 	flag.IntVar(&o.ServerPort, "sport", 0, "Tiny csgo server port")
 	flag.StringVar(&o.AccountsFile, "acfile", "", "Accounts file path")
+	flag.BoolVar(&o.UseSteamLibs, "steamlibs", true, "Use go-steam + SteamDatabase/Protobufs integration when compiled with steamlibs build tag")
 	flag.Parse()
 
 	if o.TFC != "" && o.AC != "" {

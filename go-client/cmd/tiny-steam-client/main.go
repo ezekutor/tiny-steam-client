@@ -35,8 +35,8 @@ func main() {
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer cancel()
 
-	mgr := steam.NewManager(accs)
-	if err := mgr.FetchCMServers(ctx); err != nil {
+	runner := steam.NewRunner(accs, steam.RunnerOptions{PreferSteamLib: opts.UseSteamLibs})
+	if err := runner.FetchCMServers(ctx); err != nil {
 		fmt.Fprintln(os.Stderr, "fetch cm servers:", err)
 		os.Exit(1)
 	}
@@ -59,7 +59,7 @@ func main() {
 		}()
 	}
 
-	if err := mgr.Run(ctx); err != nil && ctx.Err() == nil {
+	if err := runner.Run(ctx); err != nil && ctx.Err() == nil {
 		fmt.Fprintln(os.Stderr, "steam manager error:", err)
 		os.Exit(1)
 	}
