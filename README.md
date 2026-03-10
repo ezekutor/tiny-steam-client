@@ -127,4 +127,87 @@ Linux:
 
 ## Credit project
  - [SteamKit](https://github.com/SteamRE/SteamKit)
- - [node-steam-user](https://github.com/DoctorMcKay/node-steam-user) 
+ - [node-steam-user](https://github.com/DoctorMcKay/node-steam-user)
+
+## Porting to Rust or Go
+
+Yes, this project can be ported to either Rust or Go.
+
+### Recommended target for minimal cost + strong efficiency: **Go**
+For this specific client (network/protocol-heavy, many concurrent sessions), **Go is the practical choice** if the goal is to minimize migration cost while keeping good runtime efficiency.
+
+Why Go is the better fit here:
+- Faster development and onboarding than Rust for most teams.
+- Built-in concurrency model (`goroutines` + channels) maps well to handling many Steam account connections.
+- Usually lower implementation complexity for reconnect loops, worker pools, and operational tooling.
+- Performance is typically more than sufficient for I/O-bound Steam CM/GC traffic.
+
+Use Rust instead only if one of these is a hard requirement:
+- Maximum low-level performance and memory layout control.
+- Strict compile-time guarantees across complex unsafe/crypto-adjacent logic.
+- A team already very experienced with Rust.
+
+### What needs to be migrated
+- CM discovery and HTTP/Web API requests (`WebApiHelper`, currently backed by cURL).
+- TCP/session handling and reconnect logic.
+- Steam message serialization/deserialization (protobuf types under `src/proto`).
+- Encrypted channel/auth ticket flow (currently Crypto++/OpenSSL based).
+- Command-line account loading and runtime orchestration.
+
+### Low-risk migration plan (Go-first)
+1. Keep this C++ client as the protocol reference (golden behavior).
+2. Generate Go bindings from existing `.proto` files.
+3. Implement CM discovery + login handshake first.
+4. Port ticket generation/encrypted channel flow.
+5. Port GC communication and reconnect policy.
+6. Validate each stage by comparing message flow and auth results against the current C++ implementation.
+
+
+## Go implementation (new)
+
+A Go rewrite entrypoint is now included at:
+
+- `go-client/cmd/tiny-steam-client/main.go`
+
+Build:
+
+```bash
+go build ./go-client/cmd/tiny-steam-client
+```
+
+Run (single account):
+
+```bash
+./tiny-steam-client -user account -pw password
+```
+
+Run (multiple accounts):
+
+```bash
+./tiny-steam-client -acfile accounts.json
+```
+
+Notes:
+- The Go implementation includes CLI parity for account input options, account file loading, CM list retrieval, concurrent session loops, reconnect behavior, and optional tiny-csgo-server heartbeat transport.
+- The existing C++ implementation remains in the repository as a protocol reference during migration.
+
+
+### Using `go-steam` + `SteamDatabase/Protobufs`
+
+The Go port now includes an integration path for:
+- [`github.com/paralin/go-steam`](https://github.com/paralin/go-steam)
+- [`github.com/SteamDatabase/Protobufs`](https://github.com/SteamDatabase/Protobufs)
+
+Build with integration enabled:
+
+```bash
+go build -tags steamlibs ./go-client/cmd/tiny-steam-client
+```
+
+Run with integration preference (enabled by default):
+
+```bash
+./tiny-steam-client -steamlibs=true -user account -pw password
+```
+
+If the binary is built **without** `-tags steamlibs`, the client automatically falls back to the built-in transport implementation.
